@@ -5,7 +5,7 @@ import os
 import epubconfig as config
 
 index = 13
-index_end = 1052
+index_end = 243
 output_file = f'output/output.epub'
 
 if __name__ == '__main__':
@@ -17,18 +17,7 @@ if __name__ == '__main__':
     book.set_identifier(config.identifier)
     book.set_language(config.language)
 
-    # add cover image
-    if config.cover != "":
-        book.set_cover("image.jpg", open(config.cover, 'rb').read())
-
-    # intro chapter
-    if config.intro != "":
-        c1 = epub.EpubHtml(title='Introduction',
-                           file_name='intro.xhtml', lang='zh')
-        c1.content = f'<html><head></head><body><h1>前言</h1><p>{config.intro}</p></body></html>'
-        book.add_item(c1)
-
-    # defube style
+    # default style
     style = '''BODY { text-align: justify;}'''
     default_css = epub.EpubItem(
         uid="style_default", file_name="style/default.css", media_type="text/css", content=style)
@@ -40,41 +29,35 @@ if __name__ == '__main__':
 body {
     font-family: Cambria, Liberation Serif, Bitstream Vera Serif, Georgia, Times, Times New Roman, serif;
 }
-
 h2 {
-     text-align: left;
+    text-align: left;
      text-transform: uppercase;
      font-weight: 200;     
 }
-
-ol {
-        list-style-type: none;
-}
-
-ol > li:first-child {
-        margin-top: 0.3em;
-}
-
-
-nav[epub|type~='toc'] > ol > li > ol  {
-    list-style-type:square;
-}
-
-
-nav[epub|type~='toc'] > ol > li > ol > li {
-        margin-top: 0.3em;
-}
+ol {  list-style-type: none;}
+ol > li:first-child { margin-top: 0.3em;}
+nav[epub|type~='toc'] > ol > li > ol  { list-style-type:square; }
+nav[epub|type~='toc'] > ol > li > ol > li { margin-top: 0.3em;}
 
 '''
-
     # add css file
     nav_css = epub.EpubItem(
         uid="style_nav", file_name="style/nav.css", media_type="text/css", content=style)
     book.add_item(nav_css)
 
-    # add chapters to the book
+    # add cover image
+    if config.cover != "":
+        book.set_cover("image.jpg", open(config.cover, 'rb').read())
 
     chapters = []
+    # intro chapter
+    if config.intro != "":
+        c1 = epub.EpubHtml(title='前言', file_name='intro.xhtml', lang='zh')
+        c1.content = f'<html><head></head><body><h1>前言</h1><p>{config.intro}</p></body></html>'
+        book.add_item(c1)
+        chapters.append(c1)
+
+    # add chapters to the book
     for i in range(index, index_end+1):
         src = f'output/{i}.txt'
         print(src)
@@ -90,7 +73,6 @@ nav[epub|type~='toc'] > ol > li > ol > li {
         ch = epub.EpubHtml(title=title, file_name=f'ch_{i}.xhtml')
         ch.content = f'<h1>{title}</h1><div>{content}</div>'
         ch.add_item(default_css)
-
         book.add_item(ch)
         chapters.append(ch)
 
@@ -98,10 +80,7 @@ nav[epub|type~='toc'] > ol > li > ol > li {
     # - add manual link
     # - add section
     # - add auto created links to chapters
-    book.toc = []
-    if config.intro != "":
-        book.toc += [epub.Link('intro.xhtml', '前言', 'intro')]
-    book.toc += chapters
+    book.toc = [epub.Link('intro.xhtml', '前言', 'intro')] +chapters
 
     # add navigation files
     book.add_item(epub.EpubNcx())
