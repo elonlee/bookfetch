@@ -18,7 +18,7 @@ if __name__ == '__main__':
     book.add_author('测试作者')
     
     # add cover image
-    # book.set_cover("image.jpg", open('cover.jpg', 'rb').read())
+    book.set_cover("image.jpg", open('cover.jpg', 'rb').read())
 
     # intro chapter
     c1 = epub.EpubHtml(title='Introduction', file_name='intro.xhtml', lang='zh')
@@ -74,11 +74,15 @@ nav[epub|type~='toc'] > ol > li > ol > li {
         print(src)
         with open(src, 'r', encoding='utf-8') as fsrc:
             title = fsrc.readline()
-            content = fsrc.read(-1)
+            content = ""
+            for line in fsrc.readlines(): 
+                line = line.strip()
+                if len(line)>0:
+                    content += f'<p>{line}</p>'
             print(f'title={title}')
         # chapter
         ch = epub.EpubHtml(title=title, file_name=f'ch_{i}.xhtml')
-        ch.content=f'<h1>{title}</h1><p>{content}</p>'
+        ch.content=f'<h1>{title}</h1><div>{content}</div>'
         ch.add_item(default_css)
 
         book.add_item(ch)
@@ -89,19 +93,19 @@ nav[epub|type~='toc'] > ol > li > ol > li {
     # - add section
     # - add auto created links to chapters
 
-    book.toc = (epub.Link('intro.xhtml', '前言', 'intro'),
-                (epub.Section('正文'), tuple(chapters))
-                )
+    book.toc = [epub.Link('intro.xhtml', '前言', 'intro')] + chapters
 
     # add navigation files
     book.add_item(epub.EpubNcx())
-    book.add_item(epub.EpubNav())
+    nav = epub.EpubNav()
+    nav.add_item(nav_css)
+    book.add_item(nav)
 
 
     
     # create spin, add cover page as first page
-    # book.spine = ['cover', 'nav'] + chapters
-    book.spine = ['nav'] + chapters
+    book.spine = ['cover', 'nav'] + chapters
+    # book.spine = ['nav'] + chapters
 
     # create epub file
     if not os.path.exists("output"):
