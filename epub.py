@@ -2,13 +2,12 @@
 
 from ebooklib import epub
 import os
-import epubconfig as config
+import config
 
-index = 13
-index_end = 243
-output_file = f'output/output.epub'
 
-if __name__ == '__main__':
+def buildEpub(index, index_end, outputPath, output_file):
+    print(
+        f'starting to build epub: index:{index}, index_end:{index_end},output:{output_file}')
     book = epub.EpubBook()
 
     # add metadata
@@ -59,8 +58,10 @@ nav[epub|type~='toc'] > ol > li > ol > li { margin-top: 0.3em;}
 
     # add chapters to the book
     for i in range(index, index_end+1):
-        src = f'output/{i}.txt'
-        print(src)
+        src = f'{outputPath}/{i}.txt'
+        if not os.path.exists(src):
+            print(f'{src} is not found')
+            continue
         with open(src, 'r', encoding='utf-8') as fsrc:
             title = fsrc.readline()
             content = ""
@@ -68,7 +69,6 @@ nav[epub|type~='toc'] > ol > li > ol > li { margin-top: 0.3em;}
                 line = line.strip()
                 if len(line) > 0:
                     content += f'<p>{line}</p>'
-            print(f'title={title}')
         # chapter
         ch = epub.EpubHtml(title=title, file_name=f'ch_{i}.xhtml')
         ch.content = f'<h1>{title}</h1><div>{content}</div>'
@@ -80,7 +80,7 @@ nav[epub|type~='toc'] > ol > li > ol > li { margin-top: 0.3em;}
     # - add manual link
     # - add section
     # - add auto created links to chapters
-    book.toc = [epub.Link('intro.xhtml', '前言', 'intro')] +chapters
+    book.toc = [epub.Link('intro.xhtml', '前言', 'intro')] + chapters
 
     # add navigation files
     book.add_item(epub.EpubNcx())
@@ -99,3 +99,11 @@ nav[epub|type~='toc'] > ol > li > ol > li { margin-top: 0.3em;}
     if not os.path.exists("output"):
         os.mkdir("output")
     epub.write_epub(output_file, book, {})
+
+
+if __name__ == '__main__':
+    index = 13
+    index_end = 575
+    outputPath = f'output/{config.title}'
+    output_file = f'output/{config.title}.epub'
+    buildEpub(index, index_end, outputPath, output_file)
