@@ -5,4 +5,5 @@ author = 'author'
 language = 'zh-cn'
 identifier = 'abc123'
 cover = 'cover.jpg'
+nav = False
 intro = """intro content"""
